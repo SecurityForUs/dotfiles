@@ -20,7 +20,7 @@ function cd_vw(){
 	# Parts of the directory
 	bits=$(echo "$CD_PATH" | tr "/" "\n")
 
-	FOUND=""
+	FOUND=0
 
 	# Loop through every environment currently created
 	for env in $VIRTENVS; do
@@ -28,24 +28,22 @@ function cd_vw(){
 
 		# If a environment matches a directory we are cd'ing to
 		if [ -n "$CHECK" ]; then
+			# Found a result (mark it as so regardless if we act on it or not)
+			FOUND=1
+
 			# If we aren't already in it, load it
 			if [ "$env" != "$CUR_ENV" ]; then
-				FOUND="$env"
+				if [ -n "$CUR_ENV" ]; then
+					echo "Unloading current environment $CUR_ENV"
+					deactivate
+				fi
+				echo "Switching environment to $env"
+				workon "$env"
 			fi
 		fi
 	done
 
-	# Found a virtualenv to switch to, so do it
-	if [ -n "$FOUND" ]; then
-		# Unset current environment if it exists
-		if [ -n "$CUR_ENV" ]; then
-			echo "Unloading current environment $CUR_ENV"
-			deactivate
-		fi
-
-		echo "Switching to virtual environment $FOUND"
-		workon "$FOUND"
-	else
+	if [ $FOUND -eq 0 ]; then
 		# No virtual env found, only deactivate if an environment is in place
 		if [ -n "$CUR_ENV" ]; then
 			echo "Unloading virtual environment $CUR_ENV"
