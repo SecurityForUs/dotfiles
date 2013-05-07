@@ -24,8 +24,10 @@ function cd_vw(){
 
 	# Loop through every environment currently created
 	for env in $VIRTENVS; do
+		CHECK=$(echo "${bits[@]}" | fgrep --word-regexp "$env")
+
 		# If a environment matches a directory we are cd'ing to
-		if echo "${bits[@]}" | fgrep --word-regexp "$env"; then
+		if [ -n "$CHECK" ]; then
 			# If we aren't already in it, load it
 			if [ "$env" != "$CUR_ENV" ]; then
 				FOUND="$env"
@@ -35,6 +37,12 @@ function cd_vw(){
 
 	# Found a virtualenv to switch to, so do it
 	if [ -n "$FOUND" ]; then
+		# Unset current environment if it exists
+		if [ -n "$CUR_ENV" ]; then
+			echo "Unloading current environment $CUR_ENV"
+			deactivate
+		fi
+
 		echo "Switching to virtual environment $FOUND"
 		workon "$FOUND"
 	else
@@ -48,8 +56,13 @@ function cd_vw(){
 	cd "$CD_PATH"
 }
 
+function cdgit(){
+	FOLDER=$(readlink -f "/home/eric/git/$1")
+	cd_vw "$FOLDER"
+}
+
 # If not running interactively, don't do anything
-[[ $- != *i* ]] && return
+# [[ $- != *i* ]] && return
 
 alias ls='ls --color=auto'
 PS1='[\u@\h \W]\$ '
@@ -62,4 +75,5 @@ alias vwuse='workon'
 alias vwswitch='workon'
 alias vwclose='deactivate'
 alias vwstart='workon'
-alias cd2vw='cd_vw'
+alias cd='cd_vw'
+alias cdgit='cdgit'
